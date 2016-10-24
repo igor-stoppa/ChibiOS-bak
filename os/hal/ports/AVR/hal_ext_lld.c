@@ -361,13 +361,13 @@ void ext_lld_stop(EXTDriver *extp) {
  */
 void ext_lld_channel_enable(EXTDriver *extp, expchannel_t channel) {
   if (EXT_PC_MIN_CHANNEL <= channel && channel <= EXT_PC_MAX_CHANNEL) {
-    uint8_t port = channel / 8;
-    (*(uint8_t*)&(extp->config->channels[port].mode)) |= _BV(channel % 8);
+    uint8_t port = (channel - EXT_PC_MIN_CHANNEL) / 8;
+    (*(uint8_t*)&(extp->config->channels[port].mode)) |=
+      _BV((channel - EXT_PC_MIN_CHANNEL) % 8);
     (*(PCMSK[port])) = extp->config->channels[port].mode;
     PCICR |= _BV(port);
-  } else if (EXT_INT_MIN_CHANNEL <= channel &&
-             EXT_INT_MAX_CHANNEL >= channel) {
-    EIMSK |= (1 << (channel - EXT_INT_MIN_CHANNEL));
+  } else if (channel <= EXT_INT_MAX_CHANNEL) {
+    EIMSK |= (1 << channel);
   }
 }
 
@@ -381,14 +381,14 @@ void ext_lld_channel_enable(EXTDriver *extp, expchannel_t channel) {
  */
 void ext_lld_channel_disable(EXTDriver *extp, expchannel_t channel) {
   if (EXT_PC_MIN_CHANNEL <= channel && channel <= EXT_PC_MAX_CHANNEL) {
-    uint8_t port = channel / 8;
-    (*(uint8_t*)&(extp->config->channels[port].mode)) &= ~_BV(channel % 8);
+    uint8_t port = (channel - EXT_PC_MIN_CHANNEL) / 8;
+    (*(uint8_t*)&(extp->config->channels[port].mode)) &=
+      ~_BV((channel - EXT_PC_MIN_CHANNEL) % 8);
     (*(PCMSK[port])) = extp->config->channels[port].mode;
     if (extp->config->channels[port].mode == 0)
       PCICR &= ~_BV(port);
-  } else if (EXT_INT_MIN_CHANNEL <= channel &&
-             EXT_INT_MAX_CHANNEL >= channel) {
-    EIMSK &= ~(1 << (channel - EXT_INT_MIN_CHANNEL));
+  } else if (channel <= EXT_INT_MAX_CHANNEL) {
+    EIMSK &= ~(1 << channel);
   }
 }
 #endif /* HAL_USE_EXT == TRUE */
